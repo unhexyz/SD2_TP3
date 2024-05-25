@@ -1,23 +1,36 @@
 #include "HCSR04.h"
 
+// Las ultimas mediciones de distancia y tiempo, expresadas en milimetros,
+// y microsegundos respecitvamente.
+static uint32_t duracion_us = 0;
+static float32_t distancia_mm = 0.0;
 
-#define HCSR04_TRIGGER_PORT PORTE
-#define HCSR04_TRIGGER_GPIO GPIOE
-#define HCSR04_TRIGGER_PIN 30
+static const float32_t velocidad_sonido_mm_us = 0.34;
 
-#define HCSR04_ECHO_PORT PORTC
-#define HCSR04_ECHO_GPIO GPIOC
-#define HCSR04_ECHO_PIN 8
+// Se pone en 0 cuando se genera un disparo del sensor.
+// Se pone en 1 cuando se completa la lectura de la senal 'echo'.
+static uint8_t echo_flag = 0;
+
+// Se pone en 1 cuando se elevo el pulso de trigger.
+// Se pone en 0 cuando ya termino el pulso.
+static uint8_t trigger_flag = 0;
+
+//-------------------------------------------------------------------------
+
 
 
 extern void HCSR04_init(){
 
 	int32_t i;
 
+	#define BOARD_INITPINS_TPM_CHANNEL 1U
+	#define BOARD_TPM_INPUT_CAPTURE_CHANNEL kTPM_Chnl_1 // pin 13 puerto A
+	#define BOARD_TPM_BASEADDR TPM1
+
 	// Configuracion del trigger
 	gpio_pin_config_t gpio_trigger_config =
 	{
-		.outputLogic = 1,
+		.outputLogic = 1, //logica invertida
 		.pinDirection = kGPIO_DigitalOutput,
 	};
 
@@ -34,14 +47,10 @@ extern void HCSR04_init(){
 			.mux = kPORT_MuxAsGpio,
 	};
 
-	PORT_SetPinConfig(HCSR04_TRIGGER_PORT, HCSR04_TRIGGER_PIN, &port_trigger_config);
-	GPIO_PinInit(HCSR04_TRIGGER_GPIO, HCSR04_TRIGGER_PIN, &gpio_trigger_config);
-
-
 	// Configuracion del echo
 	gpio_pin_config_t gpio_echo_config = {
 		.pinDirection = kGPIO_DigitalInput,
-		.outputLogic = 1,
+		.outputLogic = 0,
 	};
 
 	const port_pin_config_t port_echo_config = {
@@ -57,39 +66,73 @@ extern void HCSR04_init(){
 		.mux = kPORT_MuxAsGpio,
 	};
 
-	PORT_SetPinConfig(HCSR04_ECHO_PORT, HCSR04_TRIGGER_PIN, &port_trigger_config);
-	GPIO_PinInit(HCSR04_EC_GPIO, HCSR04_TRIGGER_PIN, &gpio_trigger_config);
-
 	CLOCK_EnableClock(kCLOCK_PortA);
 	CLOCK_EnableClock(kCLOCK_PortC);
 	CLOCK_EnableClock(kCLOCK_PortD);
 	CLOCK_EnableClock(kCLOCK_PortE);
 
-	/* inicialización de leds */
-	for (i = 0 ; i < BOARD_LED_ID_TOTAL ; i++)
-	{
-		PORT_SetPinConfig(board_gpioLeds[i].port, board_gpioLeds[i].pin, &port_led_config);
-		GPIO_PinInit(board_gpioLeds[i].gpio, board_gpioLeds[i].pin, &gpio_led_config);
-	}
+	PORT_SetPinConfig(HCSR04_TRIGGER_PORT, HCSR04_TRIGGER_PIN, &port_trigger_config);
+	GPIO_PinInit(HCSR04_TRIGGER_GPIO, HCSR04_TRIGGER_PIN, &gpio_trigger_config);
 
-	/* inicialización de SWs */
-	for (i = 0 ; i < BOARD_SW_ID_TOTAL ; i++)
-	{
-		PORT_SetPinConfig(board_gpioSw[i].port, board_gpioSw[i].pin, &port_sw_config);
-		GPIO_PinInit(board_gpioSw[i].gpio, board_gpioSw[i].pin, &gpio_sw_config);
-	}
+	PORT_SetPinConfig(HCSR04_ECHO_PORT, HCSR04_ECHO_PIN, &port_echo_config);
+	GPIO_PinInit(HCSR04_ECHO_GPIO, HCSR04_ECHO_PIN, &gpio_echo_config);
+
+	// Se inicializa el tpm1 para usar input capture en la senal de echo.
+	tpm_config_t tpmInfo;
+
+	/* Configura la estructura de información del TPM */
+	TPM_GetDefaultConfig(&tpmInfo);
+	tpmInfo.prescale = kTPM_Prescale_Divide_128;
+
+	/* Inicializa el TPM */
+	TPM_Init(BOARD_TPM_BASEADDR, &tpmInfo);
+
+	/* Configura el canal para captura de entrada, se detectan ambos flancos */
+	TPM_SetupInputCapture(BOARD_TPM_BASEADDR, BOARD_TPM_INPUT_CAPTURE_CHANNEL, kTPM_RiseAndFallEdge);
 
 }
-
 
 extern void HCSR04_disparar(void){
 
 	echo_flag = 0;
-
 	trigger_flag = 1;
+
+	// Se pone en alto el trigger. Luego se pondra en bajo apenas se detecte un cambio en echo.
+	GPIO_PinWrite(HCSR04_TRIGGER_GPIO, HCSR04_TRIGGER_PIN, 1);
 
 }
 
-extern uint32_t HCSR04_ultimaMedicion(void);
+extern uint8_t HCSR04_disponible(void){
 
-extern void HCSR04_task1ms();
+	return echo_flag;
+
+}
+
+extern float32_t HCSR04_getDistance(void){
+
+	return distancia_mm;
+
+}
+
+void TPM1_IRQHandler(void) {
+
+    // Verifica si la captura de entrada ha ocurrido
+    if (TPM_GetStatusFlags(TPM1) & kTPM_Chnl1Flag) {
+        // Borra la bandera de interrupción
+        TPM_ClearStatusFlags(TPM1, kTPM_Chnl1Flag);
+
+        // Pone en 0 el trigger y su bandera.
+        GPIO_PinWrite(HCSR04_TRIGGER_GPIO, HCSR04_TRIGGER_PIN, 0);
+        trigger_flag = 0;
+
+        static uint32_t captura_anterior = 0;
+        uint32_t captura_ahora = TPM1->CONTROLS[BOARD_INITPINS_TPM_CHANNEL].CnV;
+
+        // Calcula la diferencia de tiempo
+        duracion = captura_ahora - captura_anterior; // en microsegundos
+        captura_anterior = captura_ahora;
+
+        distancia = ((float32_t)duracion) * velocidad_sonido_mm_us;
+
+    }
+}

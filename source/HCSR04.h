@@ -1,11 +1,14 @@
-#ifndef MMA8451_H_
-#define MMA8451_H_
+#ifndef HCSR04_H_
+#define HCSR04_H_
 
 /*==================[inclusions]=============================================*/
 #include <stdint.h>
-#include "fsl_i2c.h"
+#include "fsl_tpm.h"
+#include "fsl_clock.h"
 #include "fsl_port.h"
 #include "fsl_gpio.h"
+
+
 
 /*==================[cplusplus]==============================================*/
 #ifdef __cplusplus
@@ -16,44 +19,48 @@ extern "C" {
 
 /*==================[external data declaration]==============================*/
 
+#define HCSR04_TRIGGER_PORT PORTE
+#define HCSR04_TRIGGER_GPIO GPIOE
+#define HCSR04_TRIGGER_PIN 20
 
-// Almacena la ultima medicion hecha.
-static uint32_t medicion = 0;
+#define HCSR04_ECHO_PORT PORTA
+#define HCSR04_ECHO_GPIO GPIOA
+#define HCSR04_ECHO_PIN 13
 
-// Se pone en 0 cuando se genera un disparo del sensor.
-// Se pone en 1 cuando se completa la lectura de la senal 'echo'.
-static uint8_t echo_flag = 0;
-
-// Se pone en 1 cuando se elevo el pulso de trigger.
-// Se pone en 0 cuando ya termino el pulso.
-static uint8_t trigger_flag = 0;
+#define HCSR04_ECHO_INT_PRIORITY 2
 
 
 /*==================[external functions definition]==========================*/
 
-/** \brief Dispara un pulso de disparo sobre el sensor.
+
+/** \brief Inicializa lo necesario para usar el sensor.
  **
  **/
 
 extern void HCSR04_init();
 
+/** \brief Dispara un pulso de disparo sobre el sensor.
+ **
+ **/
+
 extern void HCSR04_disparar(void);
 
-
-/** \brief Devuelve la ultima medicion detectada por el sensor
+/** \brief Devuelve la echo_flag, indicando que no hay mediciones en proceso.
  **
- ** \return La ultima medicion detectada por el sensor
- **
- **/
-
-extern uint32_t HCSR04_ultimaMedicion(void);
-
-
-/** \brief Funcion que debe ejecutarse cada 1ms.
+ **	\return 0 si hay una medicion en proceso, 1 si no hay mediciones en proceso.
  **
  **/
 
-extern void HCSR04_task1ms();
+extern uint8_t HCSR04_disponible(void);
+
+
+/** \brief Devuelve la ultima distancia detectada por el sensor, en mm.
+ **
+ ** \return La ultima medicion detectada por el sensor en mm.
+ **
+ **/
+
+extern float32_t HCSR04_getDistance(void);
 
 /*==================[cplusplus]==============================================*/
 #ifdef __cplusplus
@@ -61,4 +68,4 @@ extern void HCSR04_task1ms();
 #endif
 
 /*==================[end of file]============================================*/
-#endif /* MMA8451_H_ */
+#endif /* HCSR04_H_ */
