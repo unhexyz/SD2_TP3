@@ -8,8 +8,6 @@
 #include "fsl_port.h"
 #include "fsl_gpio.h"
 
-
-
 /*==================[cplusplus]==============================================*/
 #ifdef __cplusplus
 extern "C" {
@@ -60,7 +58,7 @@ extern uint8_t HCSR04_disponible(void);
  **
  **/
 
-extern float32_t HCSR04_getDistance(void);
+extern float HCSR04_getDistance(void);
 
 /*==================[cplusplus]==============================================*/
 #ifdef __cplusplus

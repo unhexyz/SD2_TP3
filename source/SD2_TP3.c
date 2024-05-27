@@ -41,32 +41,45 @@
 #include "fsl_debug_console.h"
 /* TODO: insert other include files here. */
 
+/* FreeRTOS kernel includes. */
+#include "FreeRTOS.h"
+#include "task.h"
+#include "queue.h"
+#include "timers.h"
+#include <semphr.h>
+
+#include "taskRtos.h"
+#include "semaphore.h"
+#include "SD2_board.h"
+
 /* TODO: insert other definitions and declarations here. */
 
 /*
  * @brief   Application entry point.
  */
 int main(void) {
-
-    /* Init board hardware. */
-    BOARD_InitBootPins();
-    BOARD_InitBootClocks();
-    BOARD_InitBootPeripherals();
+	/* Init board hardware. */
+	BOARD_InitBootPins();
+	BOARD_InitBootClocks();
+	BOARD_InitBootPeripherals();
 #ifndef BOARD_INIT_DEBUG_CONSOLE_PERIPHERAL
-    /* Init FSL debug console. */
-    BOARD_InitDebugConsole();
+	/* Init FSL debug console. */
+	BOARD_InitDebugConsole();
 #endif
 
-    PRINTF("Hello World\n");
+//	BOARD_BootClockRUN();	// Tenerlo en cuenta si no funciona nada
 
-    /* Force the counter to be placed into memory. */
-    volatile static int i = 0 ;
-    /* Enter an infinite loop, just incrementing a counter. */
-    while(1) {
-        i++ ;
-        /* 'Dummy' NOP to allow source level single stepping of
-            tight while() loop */
-        __asm volatile ("nop");
-    }
-    return 0 ;
+	board_init();
+//	uart_ringBuffer_init();
+
+	semaphore_create();
+	taskRtos_create();
+
+	PRINTF("Se crearon las tareas\r\n");
+	vTaskStartScheduler();
+
+	for (;;)
+		;
+
+	return 0;
 }
