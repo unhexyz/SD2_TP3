@@ -110,7 +110,7 @@ void TPM1_IRQHandler(void) {
 		TPM_ClearStatusFlags(TPM1, kTPM_Chnl1Flag);
 
 
-		// Si se detecta flanco descendente...
+		// Si se detecta flanco descendente... (recordar logica invertida a las entradas)
 		if (GPIO_ReadPinInput(GPIO, PIN_NUMBER) == 0){
 			
 			// Pone en 0 el trigger y su bandera.
@@ -120,6 +120,7 @@ void TPM1_IRQHandler(void) {
 			captura_anterior = TPM1->CONTROLS[BOARD_INITPINS_TPM_CHANNEL].CnV;
 		}
 
+		// Si se detecta flanco ascendente...
 		else{
 			captura_ahora = TPM1->CONTROLS[BOARD_INITPINS_TPM_CHANNEL].CnV;
 
@@ -127,6 +128,8 @@ void TPM1_IRQHandler(void) {
 			duracion_us = captura_ahora - captura_anterior; // en microsegundos
 
 			distancia_mm = ((float) duracion_us) * velocidad_sonido_mm_us;
+
+			echo_flag = 1;
 		}
 	}
 
