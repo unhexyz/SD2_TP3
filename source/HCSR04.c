@@ -104,21 +104,30 @@ extern float HCSR04_getDistance(void) {
 void TPM1_IRQHandler(void) {
 	// Verifica si la captura de entrada ha ocurrido
 	if (TPM_GetStatusFlags(TPM1) & kTPM_Chnl1Flag) {
+		static uint32_t captura_anterior = 0, captura_ahora = 0;
+		
 		// Borra la bandera de interrupción
 		TPM_ClearStatusFlags(TPM1, kTPM_Chnl1Flag);
 
-		// Pone en 0 el trigger y su bandera.
-		GPIO_PinWrite(HCSR04_TRIGGER_GPIO, HCSR04_TRIGGER_PIN, 0);
-		trigger_flag = 0;
 
-		static uint32_t captura_anterior = 0;
-		uint32_t captura_ahora = TPM1->CONTROLS[BOARD_INITPINS_TPM_CHANNEL].CnV;
+		// Si se detecta flanco descendente...
+		if (GPIO_ReadPinInput(GPIO, PIN_NUMBER) == 0){
+			
+			// Pone en 0 el trigger y su bandera.
+			GPIO_PinWrite(HCSR04_TRIGGER_GPIO, HCSR04_TRIGGER_PIN, 0);
+			trigger_flag = 0;
 
-		// Calcula la diferencia de tiempo
-		duracion_us = captura_ahora - captura_anterior; // en microsegundos
-		captura_anterior = captura_ahora;
+			captura_anterior = TPM1->CONTROLS[BOARD_INITPINS_TPM_CHANNEL].CnV;
+		}
 
-		distancia_mm = ((float) duracion_us) * velocidad_sonido_mm_us;
+		else{
+			captura_ahora = TPM1->CONTROLS[BOARD_INITPINS_TPM_CHANNEL].CnV;
+
+			// Calcula la diferencia de tiempo
+			duracion_us = captura_ahora - captura_anterior; // en microsegundos
+
+			distancia_mm = ((float) duracion_us) * velocidad_sonido_mm_us;
+		}
 	}
 
 	return;
