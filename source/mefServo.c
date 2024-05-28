@@ -1,5 +1,6 @@
 #include "mefServo.h"
 #include "MG90S.h"
+#include "fsl_debug_console.h"
 
 typedef enum {
 	EST_SERVO_RESET = 0, EST_SERVO_RUNNING, EST_SERVO_STOP,
@@ -13,14 +14,29 @@ extern void mefServo_init(void) {
 
 	return;
 }
-
+uint8_t getCharValue = 0U;
 extern void mefServo(void) {
 	switch (estMefServo) {
 	case EST_SERVO_RESET:
 
+		estMefServo = EST_SERVO_RUNNING;
 		break;
 	case EST_SERVO_RUNNING:
 
+		getCharValue = GETCHAR() - 0x30U;
+
+		PRINTF("%d\r\n", getCharValue);
+
+		if (getCharValue == 1)
+			MG90S_setAngle(-90);
+		if (getCharValue == 5)
+			MG90S_setAngle(0);
+		if (getCharValue == 9)
+			MG90S_setAngle(95);
+		if (getCharValue == 7)
+			MG90S_setAngle(-180);
+		if (getCharValue == 8)
+			MG90S_setAngle(3300);
 		break;
 	case EST_SERVO_STOP:
 

@@ -3,17 +3,24 @@
 #include "fsl_tpm.h"
 #include "pin_mux.h"
 #include "clock_config.h"
+#include "fsl_gpio.h"
+#include "fsl_port.h"
 
 #define TPM_SOURCE_CLOCK CLOCK_GetFreq(kCLOCK_McgFllClk)
+#define TPM_CHANNEL	kTPM_Chnl_4
+
 
 extern void pwm_init(void) {
 	tpm_config_t tpmInfo;
 	tpm_chnl_pwm_signal_param_t tpmParam;
 
 	// Configuración del PWM
-	tpmParam.chnlNumber = kTPM_Chnl_5; // Channel 5 para PTD5
+	tpmParam.chnlNumber = kTPM_Chnl_4; // Channel 5 para PTD5
 	tpmParam.level = kTPM_HighTrue;
 	tpmParam.dutyCyclePercent = 7.5;
+
+	CLOCK_EnableClock(kCLOCK_PortD);
+	PORT_SetPinMux(PORTD, 4U, kPORT_MuxAlt4);
 
 	CLOCK_SetTpmClock(1U);
 
@@ -33,15 +40,15 @@ extern void pwm_init(void) {
 	return;
 }
 extern void pwm_setDuty(uint8_t dutty) {
-	TPM_UpdateChnlEdgeLevelSelect(TPM0, (tpm_chnl_t) BOARD_TPM_CHANNEL, 0U);
-	TPM_UpdatePwmDutycycle(TPM0, kTPM_Chnl_1, kTPM_EdgeAlignedPwm, dutty);
-	TPM_UpdateChnlEdgeLevelSelect(TPM0, (tpm_chnl_t) BOARD_TPM_CHANNEL,
-			kTPM_HighTrue);
+//	TPM_UpdateChnlEdgeLevelSelect(TPM0, (tpm_chnl_t) TPM_CHANNEL, 0U);
+	TPM_UpdatePwmDutycycle(TPM0, TPM_CHANNEL, kTPM_EdgeAlignedPwm, dutty);
+//	TPM_UpdateChnlEdgeLevelSelect(TPM0, (tpm_chnl_t) TPM_CHANNEL,
+//			kTPM_HighTrue);
 
 	return;
 }
 extern void pwm_stop(void) {
-	TPM_UpdatePwmDutycycle(TPM0, kTPM_Chnl_1, kTPM_EdgeAlignedPwm, 0);
+	TPM_UpdatePwmDutycycle(TPM0, TPM_CHANNEL, kTPM_EdgeAlignedPwm, 0);
 	TPM_StopTimer(TPM0);
 
 	return;
