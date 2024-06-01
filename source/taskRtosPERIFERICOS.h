@@ -7,6 +7,8 @@
 #include "timers.h"
 #include <semphr.h>
 
-extern void taskRtosPERIFERICOS(void);
+extern void taskRtosPERIFERICOS_Sensor(void);
+extern void taskRtosPERIFERICOS_Servo(void);
+extern void taskRtosPERIFERICOS_delayServo(void);
 
 #endif /* TASKRTOSPERIFERICOS_H_ */

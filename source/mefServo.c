@@ -1,6 +1,7 @@
 #include "mefServo.h"
 #include "MG90S.h"
 #include "fsl_debug_console.h"
+#include "taskRtosPERIFERICOS.h"
 
 typedef enum {
 	EST_SERVO_RESET = 0, EST_SERVO_RUNNING, EST_SERVO_STOP,
@@ -14,15 +15,16 @@ extern void mefServo_init(void) {
 
 	return;
 }
+
 uint8_t getCharValue = 0U;
+
 extern void mefServo(void) {
 	switch (estMefServo) {
 	case EST_SERVO_RESET:
-
 		estMefServo = EST_SERVO_RUNNING;
+
 		break;
 	case EST_SERVO_RUNNING:
-
 		getCharValue = GETCHAR() - 0x30U;
 
 		PRINTF("%d\r\n", getCharValue);
@@ -37,6 +39,9 @@ extern void mefServo(void) {
 			MG90S_setAngle(-180);
 		if (getCharValue == 8)
 			MG90S_setAngle(3300);
+
+		taskRtosPERIFERICOS_delayServo();
+
 		break;
 	case EST_SERVO_STOP:
 

@@ -20,15 +20,6 @@ extern void MG90S_setAngle(int16_t angle) {
 	return;
 }
 extern void MG90S_test(void) {
-//	for (uint8_t angle = 0; angle <= 120; angle += 10) {
-//		MG90S_setAngle(angle);
-//		vTaskDelay(DELAY_500ms);
-//	}
-//
-//	for (int8_t angle = 120; angle >= 0; angle -= 10) {
-//		MG90S_setAngle(angle);
-//		vTaskDelay(DELAY_250ms);
-//	}
 	MG90S_setAngle(-90);	// 1ms -90 grados
 	vTaskDelay(DELAY_2s);
 	pwm_setDuty(0);	// 1.5ms 0 grados
