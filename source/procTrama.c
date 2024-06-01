@@ -64,18 +64,23 @@ static void accionLed(uint8_t charIdLed, board_ledMsg_enum ledMsg)
 
 void procTrama(char *buf, int length)
 {
-    switch (buf[0])
-    {
-        case 'A':
-            accionLed(buf[1], BOARD_LED_MSG_OFF);
-            break;
-        case 'P':
-            accionLed(buf[1], BOARD_LED_MSG_ON);
-            break;
-        case 'T':
-            accionLed(buf[1], BOARD_LED_MSG_TOGGLE);
-            break;
-    }
+
+    // Mensaje: Accion sobre el Led Rojo
+    if(buf[1] == 0 && buf[2] == 1){
+	    switch (buf[0]){
+        	case 'A':
+            	accionLed(buf[1], BOARD_LED_MSG_OFF);
+            	break;
+        	case 'P':
+            	accionLed(buf[1], BOARD_LED_MSG_ON);
+            	break;
+        	case 'T':
+            	accionLed(buf[1], BOARD_LED_MSG_TOGGLE);
+            	break;
+    	    }
+     } 
+	
+    
 }
 
 /*==================[end of file]============================================*/
