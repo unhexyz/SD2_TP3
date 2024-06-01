@@ -46,41 +46,68 @@
 
 /*==================[internal functions definition]==========================*/
 
-static void accionLed(uint8_t charIdLed, board_ledMsg_enum ledMsg)
-{
-	switch (charIdLed)
-	{
-		case '1':
-			board_setLed(BOARD_LED_ID_ROJO, ledMsg);
-			break;
-
-		case '2':
-			board_setLed(BOARD_LED_ID_VERDE, ledMsg);
-			break;
-	}
-}
-
 /*==================[external functions definition]==========================*/
 
 void procTrama(char *buf, int length)
 {
 
     // Mensaje: Accion sobre el Led Rojo
-    if(buf[1] == 0 && buf[2] == 1){
-	    switch (buf[0]){
-        	case 'A':
-            	accionLed(buf[1], BOARD_LED_MSG_OFF);
+    if(buf[2] == '0' && buf[3] == '1'){
+	    switch (buf[4]){
+        	case 'E':
+            	board_setLed(BOARD_LED_ID_ROJO, BOARD_LED_MSG_ON);
             	break;
-        	case 'P':
-            	accionLed(buf[1], BOARD_LED_MSG_ON);
+        	case 'A':
+            	board_setLed(BOARD_LED_ID_ROJO, BOARD_LED_MSG_OFF);
             	break;
         	case 'T':
-            	accionLed(buf[1], BOARD_LED_MSG_TOGGLE);
+            	board_setLed(BOARD_LED_ID_ROJO, BOARD_LED_MSG_TOGGLE);
             	break;
     	    }
-     } 
+    	    
+    	    // Retransmitir el mismo mensaje recibido.
+     }
+     
+     // Mensaje: Leer estado de SW1
+     else if(buf[2] == '1' && buf[3] == '1'){
+	    if(board_getSw(BOARD_SW_ID_1)){
+	    
+	    	// Transmitir el mensaje :XX11P’LF’ (las XX deben ser iguales a las recibidas).
+	    	
+	    }
+	    
+	    else{
+	    
+	    	// Transmitir el mensaje :XX11N’LF’ (las XX deben ser iguales a las recibidas).
+	    	
+	    }
+     }
 	
-    
+     // Mensaje: Accion sobre el radar
+     else if(buf[2] == '0' && buf[3] == '2'){
+	    switch (buf[4]){
+        	case 'E':
+            	
+            	// Encender radar.
+            	
+            	break;
+        	case 'A':
+        	
+            	// Apagar radar.
+            	
+            	break;
+    	    }
+    	    
+    	    // Retransmitir el mismo mensaje recibido.
+     }
+     
+    //Mensaje: Transmitir ultimos valores de angulo en grados (GGG) y distancia en mm (DDD).
+     else if(buf[2] == '0' && buf[3] == '2'){
+	   
+	    // Transmitir la trama :XX21GGGDDD’LF’ (las XX deben ser iguales a las recibidas).
+	   
+     }
+	
 }
 
 /*==================[end of file]============================================*/
