@@ -32,9 +32,22 @@
  *
  */
 
+/* !!!!!!!!!!!! FALTA (01/06/2024) !!!!!!!!!!!!!
+ *
+ *  - Buscar mejor mecanismo para activar/desactivar el radar.
+ *
+ *  - Detectar el angulo del servo
+ *
+ *  - En que parte conviene inicializar el modulo de UART con ringbuffer
+ *
+ */
+
+
 /*==================[inclusions]=============================================*/
+#include "string.h"
 #include "procTrama.h"
 #include "SD2_board.h"
+#include "uart_ringBuffer.h"
 
 /*==================[macros and definitions]=================================*/
 
@@ -47,6 +60,16 @@
 /*==================[internal functions definition]==========================*/
 
 /*==================[external functions definition]==========================*/
+
+static uint8_t auxBuf[11]={0,0,0,0,0,
+						   0,0,0,0,0,0};
+
+static uint32_t distancia = 0, angulo = 0;
+
+static char numtochar(uint8_t num){
+	if(num<10) return (num+48);
+	else return '#';
+}
 
 void procTrama(char *buf, int length)
 {
@@ -66,6 +89,7 @@ void procTrama(char *buf, int length)
     	    }
     	    
     	    // Retransmitir el mismo mensaje recibido.
+	    	uart_ringBuffer_envDatos(buf, 6);
      }
      
      // Mensaje: Leer estado de SW1
@@ -73,13 +97,21 @@ void procTrama(char *buf, int length)
 	    if(board_getSw(BOARD_SW_ID_1)){
 	    
 	    	// Transmitir el mensaje :XX11P’LF’ (las XX deben ser iguales a las recibidas).
-	    	
+	    	auxBuf = ":XX11P";
+	    	auxBuf[1] = buf[0];
+	    	auxBuf[2] = buf[1];
+	    	auxBuf[6] = 0x0D;
+	    	uart_ringBuffer_envDatos(auxBuf, 6);
 	    }
 	    
 	    else{
 	    
 	    	// Transmitir el mensaje :XX11N’LF’ (las XX deben ser iguales a las recibidas).
-	    	
+	    	auxBuf = ":XX11N";
+	        auxBuf[1] = buf[0];
+	    	auxBuf[2] = buf[1];
+	        auxBuf[6] = 0x0D;
+	    	uart_ringBuffer_envDatos(auxBuf, 6);
 	    }
      }
 	
@@ -99,13 +131,28 @@ void procTrama(char *buf, int length)
     	    }
     	    
     	    // Retransmitir el mismo mensaje recibido.
+	        uart_ringBuffer_envDatos(buf, 6);
      }
      
     //Mensaje: Transmitir ultimos valores de angulo en grados (GGG) y distancia en mm (DDD).
      else if(buf[2] == '0' && buf[3] == '2'){
+
+    	 distancia = (uint32_t)HCSR04_getDistance();
+    	// angulo =
 	   
-	    // Transmitir la trama :XX21GGGDDD’LF’ (las XX deben ser iguales a las recibidas).
-	   
+	    // Transmitir los bytes :XX21GGGDDD’LF’ (las XX deben ser iguales a las recibidas).
+    	 auxBuf = ":XX21";
+         auxBuf[1] = buf[0];
+    	 auxBuf[2] = buf[1];
+    	 auxBuf[5] = numtochar(  angulo/100 );
+    	 auxBuf[6] = numtochar(  angulo/10 - auxBuf[5]*10 );
+    	 auxBuf[7] = numtochar(  angulo - (angulo/10)*10  );
+    	 auxBuf[8] = numtochar(  distancia/100 );
+    	 auxBuf[9] = numtochar(  distancia/10 - auxBuf[8]*10 );
+    	 auxBuf[10] = numtochar(  distancia - (distancia/10)*10  );
+    	 auxBuf[11] = 0x0D;
+
+    	 uart_ringBuffer_envDatos(auxBuf, 6);
      }
 	
 }
