@@ -48,6 +48,8 @@
 #include "string.h"
 #include "procTrama.h"
 #include "SD2_board.h"
+#include "UART0.h"
+#include "mefRecTrama.h"
 
 /*==================[macros and definitions]=================================*/
 
@@ -86,10 +88,11 @@ void procTrama(char *buf, int length)
         	case 'T':
             	board_setLed(BOARD_LED_ID_ROJO, BOARD_LED_MSG_TOGGLE);
             	break;
+        	default: taskRtosUART0_error("ERROR RECEPCION UART0: mal codificada la accion sobre el led. ");
     	    }
     	    
     	    // Retransmitir el mismo mensaje recibido.
-	    	uart_ringBuffer_envDatos(buf, 6);
+	    	uart0_envDatos(buf, 6);
      }
      
      // Mensaje: Leer estado de SW1
@@ -101,7 +104,7 @@ void procTrama(char *buf, int length)
 	    	auxBuf[1] = buf[0];
 	    	auxBuf[2] = buf[1];
 	    	auxBuf[6] = 0x0D;
-	    	uart_ringBuffer_envDatos(auxBuf, 6);
+	    	uart0_envDatos(auxBuf, 6);
 	    }
 	    
 	    else{
@@ -111,7 +114,7 @@ void procTrama(char *buf, int length)
 	        auxBuf[1] = buf[0];
 	    	auxBuf[2] = buf[1];
 	        auxBuf[6] = 0x0D;
-	    	uart_ringBuffer_envDatos(auxBuf, 6);
+	    	uart0_envDatos(auxBuf, 6);
 	    }
      }
 	
@@ -128,18 +131,25 @@ void procTrama(char *buf, int length)
             	// Apagar radar.
             	
             	break;
+
+        	default: taskRtosUART0_error("ERROR RECEPCION UART0: mal codificada la accion sobre el radar. ");
     	    }
     	    
     	    // Retransmitir el mismo mensaje recibido.
-	        uart_ringBuffer_envDatos(buf, 6);
+	        uart0_envDatos(buf, 6);
      }
      
     //Mensaje: Transmitir ultimos valores de angulo en grados (GGG) y distancia en mm (DDD).
-     else if(buf[2] == '0' && buf[3] == '2'){
+     else if(buf[2] == '2' && buf[3] == '1'){
 
     	 distancia = (uint32_t)HCSR04_getDistance();
-    	// angulo =
+
+    	// AGREGAR INFO ANGULO /////////////////////////////////////////////////////////////
 	   
+    	// angulo = (uint32_t)MG90S_getAngle();
+
+    	////////////////////////////////////////////////////////////////////////////////////
+
 	    // Transmitir los bytes :XX21GGGDDD’LF’ (las XX deben ser iguales a las recibidas).
     	 auxBuf = ":XX21";
          auxBuf[1] = buf[0];
@@ -152,9 +162,15 @@ void procTrama(char *buf, int length)
     	 auxBuf[10] = numtochar(  distancia - (distancia/10)*10  );
     	 auxBuf[11] = 0x0D;
 
-    	 uart_ringBuffer_envDatos(auxBuf, 6);
+    	 uart0_envDatos(auxBuf, 6);
      }
 	
+     else {
+
+    	 taskRtosUART0_error("ERROR RECEPCION UART0: mal codificado el tercer o cuarto byte del mensaje. ");
+
+     }
+
 }
 
 /*==================[end of file]============================================*/

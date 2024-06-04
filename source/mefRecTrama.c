@@ -53,6 +53,11 @@ typedef enum
 /*==================[internal data declaration]==============================*/
 static char bufferRec[BUFFER_SIZE];
 
+static mefRecTrama_estado_enum estado;
+
+static uint8_t indexRec;
+
+
 /*==================[internal functions declaration]=========================*/
 
 /*==================[external data definition]===============================*/
@@ -61,15 +66,18 @@ static char bufferRec[BUFFER_SIZE];
 
 /*==================[external functions definition]==========================*/
 
+void mefRecTrama_init(void){
+
+	estado = MEF_REC_ESPERANDO_INICIO;
+
+}
+
 void mefRecTrama_task(void)
 {
-	static mefRecTrama_estado_enum estado = MEF_REC_ESPERANDO_INICIO;
-
 	uint32_t flagRec;
 	uint8_t byteRec;
-	static uint8_t indexRec;
 
-	flagRec = uart_ringBuffer_recDatos(&byteRec, sizeof(byteRec));
+	flagRec = uart0_recDatos(&byteRec, sizeof(byteRec));
 
 	switch (estado)
 	{
@@ -123,6 +131,8 @@ void mefRecTrama_task(void)
 			break;
 	}
 }
+
+
 
 
 /*==================[end of file]============================================*/

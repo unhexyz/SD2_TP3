@@ -8,8 +8,7 @@
 #include "taskRtosPERIFERICOS.h"
 #include "fsl_debug_console.h"
 
-#define UART0_RX_PRIORITY		configMAX_PRIORITIES - 1
-#define UART0_TX_PRIORITY		configMAX_PRIORITIES - 1
+#define UART0_PRIORITY		configMAX_PRIORITIES - 1
 #define NEXTION_PRIORITY		tskIDLE_PRIORITY + 1
 #define PERIFERICOS_PRIORITY	tskIDLE_PRIORITY + 1
 #define STACK_SIZE_GENERAL		configMINIMAL_STACK_SIZE+100
@@ -22,8 +21,7 @@ typedef struct {
 } TaskConfig_t;
 
 static const TaskConfig_t taskConfigs[NUM_TASK] = {
-//    {taskRtosUART0_Rx, "ISR_RX_U0", STACK_SIZE_GENERAL, UART0_RX_PRIORITY},
-//    {taskRtosUART0_Tx, "ISR_TX_U0", STACK_SIZE_GENERAL, UART0_TX_PRIORITY},
+//    {taskRtosUART0, "ISR_RX_U0", STACK_SIZE_GENERAL, UART0_PRIORITY},
     {taskRtosNextion, "ISR_TX_U1", STACK_SIZE_GENERAL, NEXTION_PRIORITY},
     {taskRtosPERIFERICOS_Sensor, "Sensor", STACK_SIZE_GENERAL, PERIFERICOS_PRIORITY},
 	{taskRtosPERIFERICOS_Servo, "Servo", STACK_SIZE_GENERAL, PERIFERICOS_PRIORITY},

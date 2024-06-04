@@ -4,12 +4,17 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
-extern void taskRtosUART0_Rx(void) {
+extern void taskRtosUART0(void) {
+
+	uart0_init();
+	mefRecTrama_init();
 
 	for (;;) {
-		if (semaphore_take(SEMAPHORE_RX_UART0, portMAX_DELAY)) {
+		if (semaphore_take(SEMAPHORE_UART0, portMAX_DELAY)) {
 
+			mefRecTrama();
 
+			vTaskDelay(DELAY_10ms);
 
 		}
 	}
@@ -18,14 +23,8 @@ extern void taskRtosUART0_Rx(void) {
 	return;
 }
 
-extern void taskRtosUART0_Tx(void) {
+extern void taskRtosUART0_error(char* err) {
 
-	for (;;) {
-		if (semaphore_take(SEMAPHORE_TX_UART0, portMAX_DELAY)) {
+	printf("%s", err);
 
-		}
-	}
-
-	vTaskDelete(NULL);
-	return;
 }
