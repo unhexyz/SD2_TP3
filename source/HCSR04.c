@@ -126,7 +126,7 @@ void TPM1_IRQHandler(void) {
 			// Calcula la diferencia de tiempo
 			duracion_us = captura_ahora - captura_anterior; // en microsegundos
 
-			distancia_mm = ((float) duracion_us) * velocidad_sonido_mm_us;
+			distancia_mm = ((float) duracion_us) * velocidad_sonido_mm_us / 2.0;
 
 			echo_flag = 1;
 		}
