@@ -12,7 +12,7 @@
 #define UART0_TX_PRIORITY		configMAX_PRIORITIES - 1
 #define NEXTION_PRIORITY		tskIDLE_PRIORITY + 1
 #define PERIFERICOS_PRIORITY	tskIDLE_PRIORITY + 1
-#define STACK_SIZE_GENERAL		configMINIMAL_STACK_SIZE+200
+#define STACK_SIZE_GENERAL		configMINIMAL_STACK_SIZE+100
 
 typedef struct {
 	TaskFunction_t taskFunction;

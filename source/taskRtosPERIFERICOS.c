@@ -34,7 +34,7 @@ extern void taskRtosPERIFERICOS_Sensor(void) {
 }
 
 extern void taskRtosPERIFERICOS_delayServo(void) {
-	vTaskDelay(DELAY_250ms);
+	vTaskDelay(DELAY_500ms);
 
 	return;
 }
