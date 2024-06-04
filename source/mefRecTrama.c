@@ -33,9 +33,9 @@
  */
 
 /*==================[inclusions]=============================================*/
+#include <UART0.h>
 #include "mefRecTrama.h"
 #include "procTrama.h"
-#include "uart_ringBuffer.h"
 
 /*==================[macros and definitions]=================================*/
 typedef enum

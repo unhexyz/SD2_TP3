@@ -5,7 +5,7 @@
 
 // Enumeración para identificar los semáforos
 typedef enum {
-	SEMAPHORE_TX_UART0, SEMAPHORE_RX_UART0, SEMAPHORE_TX_UART1, NUM_SEMAPHORES,
+	SEMAPHORE_UART0, SEMAPHORE_TX_UART1, NUM_SEMAPHORES,
 
 } SemaphoreId_t;
 

@@ -9,6 +9,8 @@ extern void taskRtosUART0_Rx(void) {
 	for (;;) {
 		if (semaphore_take(SEMAPHORE_RX_UART0, portMAX_DELAY)) {
 
+
+
 		}
 	}
 

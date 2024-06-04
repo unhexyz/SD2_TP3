@@ -25,6 +25,8 @@ extern void mefProcData(void) {
 	case EST_PROCESSING_IDLE:
 		ProcData = true;
 
+
+
 		break;
 	case EST_PROCESSING_DATA_LED:
 

@@ -44,10 +44,10 @@
 
 
 /*==================[inclusions]=============================================*/
+#include <UART0.h>
 #include "string.h"
 #include "procTrama.h"
 #include "SD2_board.h"
-#include "uart_ringBuffer.h"
 
 /*==================[macros and definitions]=================================*/
 

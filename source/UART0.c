@@ -45,13 +45,16 @@
 #include "board.h"
 #include "MKL46Z4.h"
 #include "pin_mux.h"
-#include "ringBuffer.h"
+
+#include "FreeRTOS.h"
+#include "queue.h"
 
 /*==================[macros and definitions]=================================*/
 
 /*==================[internal data declaration]==============================*/
-static void* pRingBufferRx;
-static void* pRingBufferTx;
+
+static QueueHandle_t  Rx_Queue;//static void* pRingBufferRx;
+static QueueHandle_t  Tx_Queue;//static void* pRingBufferTx;
 
 /*==================[internal functions declaration]=========================*/
 
@@ -61,12 +64,12 @@ static void* pRingBufferTx;
 
 /*==================[external functions definition]==========================*/
 
-void uart_ringBuffer_init(void)
+void uart0_init(void)
 {
 	lpsci_config_t config;
 
-    pRingBufferRx = ringBuffer_init(16);
-    pRingBufferTx = ringBuffer_init(16);
+    Rx_Queue = XQueueCreate(16, sizeof(uint8_t));//pRingBufferRx = ringBuffer_init(16);
+    Tx_Queue = XQueueCreate(16, sizeof(uint8_t));//pRingBufferTx = ringBuffer_init(16);
 
 	CLOCK_SetLpsci0Clock(0x1U);
 
@@ -103,18 +106,19 @@ void uart_ringBuffer_init(void)
  ** \param[in] size tamaño del buffer
  ** \return cantidad de bytes recibidos
  **/
-int32_t uart_ringBuffer_recDatos(uint8_t *pBuf, int32_t size)
+int32_t uart0_recDatos(uint8_t *pBuf, int32_t size)
 {
     int32_t ret = 0;
 
     /* entra sección de código crítico */
     NVIC_DisableIRQ(UART0_IRQn);
 
-    while (!ringBuffer_isEmpty(pRingBufferRx) && ret < size)
+    while (uxQueueMessagesWaiting(Rx_Queue) && ret < size)    //!ringBuffer_isEmpty(pRingBufferRx) && ret < size
     {
     	uint8_t dato;
 
-        ringBuffer_getData(pRingBufferRx, &dato);
+        //ringBuffer_getData(pRingBufferRx, &dato);
+        xQueueReceive(Rx_Queue, &dato, portMAX_DELAY);
 
         pBuf[ret] = dato;
 
@@ -133,20 +137,20 @@ int32_t uart_ringBuffer_recDatos(uint8_t *pBuf, int32_t size)
  ** \param[in] size tamaño del buffer
  ** \return cantidad de bytes enviados
  **/
-int32_t uart_ringBuffer_envDatos(uint8_t *pBuf, int32_t size)
+int32_t uart0_envDatos(uint8_t *pBuf, int32_t size)
 {
     int32_t ret = 0;
 
     /* entra sección de código crítico */
     NVIC_DisableIRQ(UART0_IRQn);
 
-    /* si el buffer estaba vacío hay que habilitar la int TX */
-    if (ringBuffer_isEmpty(pRingBufferTx))
+    /* si la cola estaba vacía hay que habilitar la int TX */
+    if (uxQueueMessagesWaiting(Tx_Queue) == 0) //ringBuffer_isEmpty(pRingBufferTx))
     	LPSCI_EnableInterrupts(UART0, kLPSCI_TxDataRegEmptyInterruptEnable);
 
-    while (!ringBuffer_isFull(pRingBufferTx) && ret < size)
+    while (uxQueueSpacesAvailable(xQueue) && ret < size) //!ringBuffer_isFull(pRingBufferTx) && ret < size)
     {
-        ringBuffer_putData(pRingBufferTx, pBuf[ret]);
+    	xQueueSend(Tx_Queue, &pBuf[ret], NULL);  //ringBuffer_putData(pRingBufferTx, pBuf[ret]);
         ret++;
     }
 
@@ -167,8 +171,8 @@ void UART0_IRQHandler(void)
         /* obtiene dato recibido por puerto serie */
 	    data = LPSCI_ReadByte(UART0);
 
-		/* pone dato en ring buffer */
-		ringBuffer_putData(pRingBufferRx, data);
+		/* pone dato en cola */
+	    xQueueSendFromISR(Rx_Queue, &data, NULL);//ringBuffer_putData(pRingBufferRx, data);
 
 		LPSCI_ClearStatusFlags(UART0, kLPSCI_RxDataRegFullFlag);
 	}
@@ -176,7 +180,7 @@ void UART0_IRQHandler(void)
 	if ( (kLPSCI_TxDataRegEmptyFlag)            & LPSCI_GetStatusFlags(UART0) &&
          (kLPSCI_TxDataRegEmptyInterruptEnable) & LPSCI_GetEnabledInterrupts(UART0) )
 	{
-		if (ringBuffer_getData(pRingBufferTx, &data))
+		if (xQueueReceiveFromISR(Tx_Queue, &data, portMAX_DELAY)) //ringBuffer_getData(pRingBufferTx, &data))
 		{
 			/* envía dato extraído del RB al puerto serie */
 		    LPSCI_WriteByte(UART0, data);
