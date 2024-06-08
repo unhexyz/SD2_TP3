@@ -21,10 +21,10 @@ typedef struct {
 } TaskConfig_t;
 
 static const TaskConfig_t taskConfigs[NUM_TASK] = {
-//    {taskRtosUART0, "ISR_RX_U0", STACK_SIZE_GENERAL, UART0_PRIORITY},
-    {taskRtosNextion, "ISR_TX_U1", STACK_SIZE_GENERAL, NEXTION_PRIORITY},
-    {taskRtosPERIFERICOS_Sensor, "Sensor", STACK_SIZE_GENERAL, PERIFERICOS_PRIORITY},
-	{taskRtosPERIFERICOS_Servo, "Servo", STACK_SIZE_GENERAL, PERIFERICOS_PRIORITY},
+	{taskRtosUART0, "ISR_RX_U0", STACK_SIZE_GENERAL, UART0_PRIORITY},
+    //{taskRtosNextion, "ISR_TX_U1", STACK_SIZE_GENERAL, NEXTION_PRIORITY},
+    //{taskRtosPERIFERICOS_Sensor, "Sensor", STACK_SIZE_GENERAL, PERIFERICOS_PRIORITY},
+	//{taskRtosPERIFERICOS_Servo, "Servo", STACK_SIZE_GENERAL, PERIFERICOS_PRIORITY},
 };
 
 extern void taskRtos_create(void) {

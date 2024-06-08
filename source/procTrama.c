@@ -44,6 +44,7 @@
 
 
 /*==================[inclusions]=============================================*/
+#include "stdio.h"
 #include <UART0.h>
 #include "string.h"
 #include "procTrama.h"
@@ -100,7 +101,7 @@ void procTrama(char *buf, int length)
 	    if(board_getSw(BOARD_SW_ID_1)){
 	    
 	    	// Transmitir el mensaje :XX11P’LF’ (las XX deben ser iguales a las recibidas).
-	    	auxBuf = ":XX11P";
+	    	strcpy(auxBuf, ":XX11P");
 	    	auxBuf[1] = buf[0];
 	    	auxBuf[2] = buf[1];
 	    	auxBuf[6] = 0x0D;
@@ -110,7 +111,7 @@ void procTrama(char *buf, int length)
 	    else{
 	    
 	    	// Transmitir el mensaje :XX11N’LF’ (las XX deben ser iguales a las recibidas).
-	    	auxBuf = ":XX11N";
+	    	strcpy(auxBuf, ":XX11N");
 	        auxBuf[1] = buf[0];
 	    	auxBuf[2] = buf[1];
 	        auxBuf[6] = 0x0D;
@@ -151,7 +152,7 @@ void procTrama(char *buf, int length)
     	////////////////////////////////////////////////////////////////////////////////////
 
 	    // Transmitir los bytes :XX21GGGDDD’LF’ (las XX deben ser iguales a las recibidas).
-    	 auxBuf = ":XX21";
+    	 strcpy(auxBuf,":XX21");
          auxBuf[1] = buf[0];
     	 auxBuf[2] = buf[1];
     	 auxBuf[5] = numtochar(  angulo/100 );
